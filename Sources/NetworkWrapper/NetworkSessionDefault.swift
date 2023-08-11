@@ -24,11 +24,12 @@ public class NetworkSessionDefault: NSObject, NetworkSession {
         self.session = URLSession(configuration: configuration)
     }
     
-    public func data(with request: URLRequest) async throws -> (Data, URLResponse) {
-        do {
-            return try await session.data(for: request)
-        } catch (let error) {
-            throw error
+    public func call(_ request: URLRequest) async throws -> Data {
+        let (data, response) = try await session.data(for: request)
+        guard let response = response.httpResponse, response.isOk else {
+            throw DispatcherError.invalidResponse
         }
+        return data
     }
 }
+

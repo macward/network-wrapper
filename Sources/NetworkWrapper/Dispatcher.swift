@@ -21,9 +21,9 @@ public class Dispatcher: RequestDispatcher {
         self.headers = headers
     }
     
-    public func execute<T: Codable>(request: Request, of type: T.Type) async -> Result<T, DispatcherError> {
+    public func execute<T: Codable>(request: Request, of type: T.Type) async throws -> T {
         guard var urlRequest = request.urlRequest(baseUrl: self.baseUrl) else {
-            return .failure(DispatcherError.badRequest("Something went wrong with the request"))
+            throw DispatcherError.badRequest("Something went wrong with the request")
         }
         
         headers?.forEach({ (key: String, value: String) in
@@ -33,13 +33,12 @@ public class Dispatcher: RequestDispatcher {
         request.headers?.forEach({ (key: String, value: String) in
             urlRequest.addValue(value, forHTTPHeaderField: key)
         })
+        
         do {
-            let (data, _) = try await networkSession.data(with: urlRequest)
-            
-            let decoder = JSONDecoder()
-            return .success(try decoder.decode(T.self, from: data))
+            let data = try await networkSession.call(urlRequest)
+            return try JSONDecoder().decode(T.self, from: data)
         } catch (let error) {
-            return .failure(DispatcherError.parseError(error.localizedDescription))
+            throw DispatcherError.parseError(error.localizedDescription)
         }
     }
 }
