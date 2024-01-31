@@ -33,7 +33,7 @@ extension Request {
         guard method == .get, let parameters = parameters else {
             return nil
         }
-        return parameters.map { (key: String, value: Any?) -> URLQueryItem in
+        return parameters.map { (key: String, value: Any) -> URLQueryItem in
             let valueString = String(describing: value)
             return URLQueryItem(name: key, value: valueString)
         }
